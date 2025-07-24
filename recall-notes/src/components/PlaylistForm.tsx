@@ -13,8 +13,7 @@ interface PlaylistFormProps {
 export const PlaylistForm = ({ userId, onError, onSuccess }: PlaylistFormProps) => {
   const [formData, setFormData] = useState<PlaylistFormData>({
     title: '',
-    artist: '',
-    spotifyId: ''
+    artist: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   
@@ -32,22 +31,22 @@ export const PlaylistForm = ({ userId, onError, onSuccess }: PlaylistFormProps) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.title || !formData.artist || !formData.spotifyId) {
-      onError("すべてのフィールドを入力してください")
+    if (!formData.title || !formData.artist) {
+      onError("曲名とアーティスト名を入力してください")
       return
     }
 
     setIsSubmitting(true)
     try {
       await addPlaylist({
-        ...formData,
+        title: formData.title,
+        artist: formData.artist,
         userId
       })
       
       setFormData({
         title: '',
-        artist: '',
-        spotifyId: ''
+        artist: ''
       })
       
       onSuccess?.()
@@ -84,19 +83,6 @@ export const PlaylistForm = ({ userId, onError, onSuccess }: PlaylistFormProps) 
             value={formData.artist}
             onChange={handleInputChange('artist')}
             placeholder="アーティスト名を入力してください"
-            required
-            disabled={isSubmitting}
-          />
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="spotifyId">Spotify ID</label>
-          <input
-            id="spotifyId"
-            type="text"
-            value={formData.spotifyId}
-            onChange={handleInputChange('spotifyId')}
-            placeholder="Spotify IDを入力してください"
             required
             disabled={isSubmitting}
           />
