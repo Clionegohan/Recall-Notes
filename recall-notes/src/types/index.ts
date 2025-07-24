@@ -17,11 +17,10 @@ export type Playlist = {
   title: string
   artist: string
   userId: string
-  spotifyId: string
+  spotifyId?: string
 }
 
 export type PlaylistFormData = {
   title: string
   artist: string
-  spotifyId: string
 }

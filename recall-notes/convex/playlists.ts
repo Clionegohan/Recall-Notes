@@ -16,7 +16,7 @@ export const addPlaylist = mutation({
         title: v.string(),
         artist: v.string(),
         userId: v.id("users"),
-        spotifyId: v.string(),
+        spotifyId: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         return await ctx.db.insert("playlists", args);

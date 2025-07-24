@@ -22,7 +22,9 @@ const PlaylistCard = ({ playlist }: PlaylistCardProps) => {
       <div className="playlist-info">
         <h3 className="playlist-title">{playlist.title}</h3>
         <p className="playlist-artist">by {playlist.artist}</p>
-        <p className="playlist-spotify">Spotify: {playlist.spotifyId}</p>
+        {playlist.spotifyId && (
+          <p className="playlist-spotify">Spotify: {playlist.spotifyId}</p>
+        )}
       </div>
       <div className="playlist-actions">
         <button className="play-btn" onClick={handlePlay}>
