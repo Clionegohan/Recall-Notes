@@ -15,7 +15,7 @@ export default defineSchema({
         title: v.string(),
         artist: v.string(),
         userId: v.string(),
-        spotifyId: v.string(),
+        spotifyId: v.optional(v.string()),
     }).index("by_user", ["userId"])
       .index("by_artist", ["artist"]),
 });
