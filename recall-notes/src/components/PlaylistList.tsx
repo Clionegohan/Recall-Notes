@@ -1,4 +1,5 @@
 import { useQuery } from 'convex/react'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../../convex/_generated/api'
 import type { Id } from '../../convex/_generated/dataModel'
 import type { Playlist } from '../types'
@@ -12,25 +13,55 @@ interface PlaylistCardProps {
 }
 
 const PlaylistCard = ({ playlist }: PlaylistCardProps) => {
-  const handlePlay = () => {
-    // TODO: Spotify API integration
-    console.log(`Playing: ${playlist.title} by ${playlist.artist}`)
+  const navigate = useNavigate()
+
+  const handleArtistClick = () => {
+    if (playlist.artistId) {
+      navigate(`/artist/${playlist.artistId}`)
+    }
+  }
+
+  const handleAlbumClick = () => {
+    if (playlist.albumId) {
+      navigate(`/album/${playlist.albumId}`)
+    }
   }
 
   return (
     <div className="playlist-card">
       <div className="playlist-info">
         <h3 className="playlist-title">{playlist.title}</h3>
-        <p className="playlist-artist">by {playlist.artist}</p>
+        <p className="playlist-artist">
+          by{' '}
+          {playlist.artistId ? (
+            <span 
+              className="clickable-artist"
+              onClick={handleArtistClick}
+              title={`${playlist.artist}の楽曲一覧を見る`}
+            >
+              {playlist.artist}
+            </span>
+          ) : (
+            playlist.artist
+          )}
+        </p>
         {playlist.spotifyId && (
           <p className="playlist-spotify">Spotify: {playlist.spotifyId}</p>
         )}
       </div>
-      <div className="playlist-actions">
-        <button className="play-btn" onClick={handlePlay}>
-          ▶️ 再生
-        </button>
-      </div>
+      {playlist.albumArt && (
+        <div 
+          className="playlist-album-art"
+          onClick={handleAlbumClick}
+          title={playlist.albumName ? `アルバム「${playlist.albumName}」の楽曲一覧を見る` : undefined}
+        >
+          <img 
+            src={playlist.albumArt} 
+            alt={`${playlist.title} album art`}
+            className="album-art-image"
+          />
+        </div>
+      )}
     </div>
   )
 }
