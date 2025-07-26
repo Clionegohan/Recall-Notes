@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { PlaylistForm } from '../components/PlaylistForm'
 import type { Id } from '../../convex/_generated/dataModel'
 
@@ -9,11 +8,10 @@ interface AddPlaylistPageProps {
 
 export const AddPlaylistPage = ({ userId }: AddPlaylistPageProps) => {
   const [error, setError] = useState<string | null>(null)
-  const navigate = useNavigate()
 
   const handleSuccess = () => {
-    // 成功時にプレイリストページに遷移
-    navigate('/playlists')
+    // 成功メッセージを表示するのみ（リダイレクトなし）
+    // PlaylistFormで成功時の処理は完結
   }
 
   const handleError = (errorMessage: string) => {
