@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useAction } from 'convex/react'
 import { useDebounce } from './useDebounce'
-import { searchSpotifyTracks } from '../services/spotify'
-import { searchMockSpotifyTracks, hasSpotifyCredentials } from '../services/mockSpotify'
+import { searchMockSpotifyTracks } from '../services/mockSpotify'
+import { api } from '../../convex/_generated/api'
 import type { TrackSuggestion, SearchState } from '../types/spotify'
 
 /**
@@ -23,6 +24,9 @@ export const useSpotifySearch = (
     minQueryLength = 2,
     enableCache = true
   } = options
+
+  // Convex action for Spotify search
+  const searchTracks = useAction(api.spotify.searchTracks)
 
   // 状態管理
   const [searchState, setSearchState] = useState<SearchState>({
@@ -70,10 +74,10 @@ export const useSpotifySearch = (
     }))
 
     try {
-      // 環境変数が設定されていない場合はモックデータを使用
-      const results = hasSpotifyCredentials 
-        ? await searchSpotifyTracks(searchQuery, limit)
-        : await searchMockSpotifyTracks(searchQuery, limit)
+      console.log('Starting Spotify search for:', searchQuery)
+      // Convex action経由でSpotify APIを呼び出し
+      const results = await searchTracks({ query: searchQuery, limit }) as TrackSuggestion[]
+      console.log('Spotify search results:', results.length, 'tracks')
       
       // キャッシュに保存
       if (enableCache) {
@@ -88,15 +92,34 @@ export const useSpotifySearch = (
       }))
 
     } catch (error) {
-      console.error('Search error:', error)
-      setSearchState(prev => ({
-        ...prev,
-        suggestions: [],
-        isLoading: false,
-        error: error instanceof Error ? error.message : '検索エラーが発生しました'
-      }))
+      console.error('Spotify search error:', error)
+      // エラー時はモックデータにフォールバック
+      console.log('Falling back to mock data')
+      try {
+        const mockResults = await searchMockSpotifyTracks(searchQuery, limit)
+        console.log('Mock search results:', mockResults.length, 'tracks')
+        
+        if (enableCache) {
+          cache.set(searchQuery, mockResults)
+        }
+
+        setSearchState(prev => ({
+          ...prev,
+          suggestions: mockResults,
+          isLoading: false,
+          error: null
+        }))
+      } catch (mockError) {
+        console.error('Mock search also failed:', mockError)
+        setSearchState(prev => ({
+          ...prev,
+          suggestions: [],
+          isLoading: false,
+          error: '検索エラーが発生しました'
+        }))
+      }
     }
-  }, [cache, enableCache, limit, minQueryLength])
+  }, [cache, enableCache, limit, minQueryLength, searchTracks])
 
   // デバウンスされたクエリに基づいて検索実行
   useEffect(() => {
