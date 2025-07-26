@@ -3,6 +3,8 @@ import { useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import type { Id } from '../../convex/_generated/dataModel'
 import type { PlaylistFormData } from '../types'
+import type { TrackSuggestion } from '../types/spotify'
+import { SearchInput } from './SearchInput'
 
 interface PlaylistFormProps {
   userId: Id<"users">
@@ -15,6 +17,7 @@ export const PlaylistForm = ({ userId, onError, onSuccess }: PlaylistFormProps) 
     title: '',
     artist: ''
   })
+  const [selectedTrack, setSelectedTrack] = useState<TrackSuggestion | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   const addPlaylist = useMutation(api.playlists.addPlaylist)
@@ -26,6 +29,14 @@ export const PlaylistForm = ({ userId, onError, onSuccess }: PlaylistFormProps) 
       ...prev,
       [field]: e.target.value
     }))
+  }
+
+  const handleTrackSelect = (track: TrackSuggestion) => {
+    setSelectedTrack(track)
+    setFormData({
+      title: track.name,
+      artist: track.artist
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,13 +52,19 @@ export const PlaylistForm = ({ userId, onError, onSuccess }: PlaylistFormProps) 
       await addPlaylist({
         title: formData.title,
         artist: formData.artist,
-        userId
+        userId,
+        albumArt: selectedTrack?.albumArt,
+        albumName: selectedTrack?.albumName,
+        albumId: selectedTrack?.albumId,
+        artistId: selectedTrack?.artistId,
+        spotifyId: selectedTrack?.id
       })
       
       setFormData({
         title: '',
         artist: ''
       })
+      setSelectedTrack(null)
       
       onSuccess?.()
     } catch (err) {
@@ -63,7 +80,36 @@ export const PlaylistForm = ({ userId, onError, onSuccess }: PlaylistFormProps) 
       <h2>新しいプレイリストを追加</h2>
       <form onSubmit={handleSubmit} className="playlist-form">
         <div className="form-group">
-          <label htmlFor="title">曲名</label>
+          <label htmlFor="search">楽曲を検索</label>
+          <SearchInput
+            id="search"
+            placeholder="楽曲名またはアーティスト名を入力してください"
+            onTrackSelect={handleTrackSelect}
+            disabled={isSubmitting}
+          />
+        </div>
+        
+        {selectedTrack && (
+          <div className="selected-track">
+            <h4>選択された楽曲:</h4>
+            <div className="track-info">
+              {selectedTrack.albumArt && (
+                <img 
+                  src={selectedTrack.albumArt} 
+                  alt={`${selectedTrack.name} album art`}
+                  className="selected-track-art"
+                />
+              )}
+              <div>
+                <div className="track-name">{selectedTrack.name}</div>
+                <div className="track-artist">{selectedTrack.artist}</div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <div className="form-group">
+          <label htmlFor="title">曲名 (手動入力も可能)</label>
           <input
             id="title"
             type="text"
@@ -76,7 +122,7 @@ export const PlaylistForm = ({ userId, onError, onSuccess }: PlaylistFormProps) 
         </div>
         
         <div className="form-group">
-          <label htmlFor="artist">アーティスト</label>
+          <label htmlFor="artist">アーティスト (手動入力も可能)</label>
           <input
             id="artist"
             type="text"
