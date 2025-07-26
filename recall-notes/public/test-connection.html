@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Connection Test</title>
+</head>
+<body>
+    <h1>Convex Connection Test</h1>
+    <button onclick="testConnection()">Test Connection</button>
+    <div id="result"></div>
+
+    <script type="module">
+        async function testConnection() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Testing...';
+            
+            try {
+                const response = await fetch('https://fine-dalmatian-772.convex.cloud/api/actions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        path: 'spotify:searchTracks',
+                        args: { query: 'test', limit: 1 }
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Response:', data);
+                
+                if (data.success) {
+                    result.innerHTML = `<h3>Success</h3><pre>${JSON.stringify(data.value, null, 2)}</pre>`;
+                } else {
+                    result.innerHTML = `<h3>Error</h3><pre>${JSON.stringify(data.error, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                result.innerHTML = `<h3>Network Error</h3><p>${error.message}</p>`;
+            }
+        }
+        
+        window.testConnection = testConnection;
+    </script>
+</body>
+</html>

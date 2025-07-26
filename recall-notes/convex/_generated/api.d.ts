@@ -14,6 +14,7 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as playlists from "../playlists.js";
+import type * as spotify from "../spotify.js";
 import type * as users from "../users.js";
 
 /**
@@ -26,6 +27,7 @@ import type * as users from "../users.js";
  */
 declare const fullApi: ApiFromModules<{
   playlists: typeof playlists;
+  spotify: typeof spotify;
   users: typeof users;
 }>;
 export declare const api: FilterApi<
