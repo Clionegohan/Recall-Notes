@@ -52,7 +52,10 @@ export interface TrackSuggestion {
   name: string
   artist: string
   albumArt?: string
-  previewUrl?: string
+  albumName?: string
+  albumId?: string
+  artistId?: string
+  popularity?: number
 }
 
 // 検索状態管理用
@@ -63,9 +66,3 @@ export interface SearchState {
   error: string | null
 }
 
-// API設定
-export interface SpotifyConfig {
-  clientId: string
-  clientSecret: string
-  accessToken?: string
-}
