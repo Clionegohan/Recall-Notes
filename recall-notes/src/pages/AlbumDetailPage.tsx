@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useMutation } from 'convex/react'
-import { getAlbumTracks } from '../services/spotify'
+import { useMutation, useAction } from 'convex/react'
 import { LoadingSpinner } from '../components/LoadingSpinner'
 import { ErrorMessage } from '../components/ErrorMessage'
 import { api } from '../../convex/_generated/api'
@@ -29,28 +28,35 @@ export const AlbumDetailPage = () => {
   const [addingTrackId, setAddingTrackId] = useState<string | null>(null)
   
   const addPlaylist = useMutation(api["functions/playlists"].addPlaylist)
+  const getAlbumDetails = useAction(api["functions/spotify"].getAlbumDetails)
+  const getAlbumTracks = useAction(api["functions/spotify"].getAlbumTracks)
 
   useEffect(() => {
-    const fetchAlbumTracks = async () => {
+    const fetchAlbumData = async () => {
       if (!albumId) return
 
       try {
         setIsLoading(true)
         setError(null)
         
-        const result = await getAlbumTracks(albumId)
-        setTracks(result.tracks)
-        setAlbum(result.album)
+        // アルバム詳細と楽曲を並行して取得
+        const [albumDetails, tracksResult] = await Promise.all([
+          getAlbumDetails({ albumId }),
+          getAlbumTracks({ albumId })
+        ])
+        
+        setAlbum(tracksResult.album)
+        setTracks(tracksResult.tracks)
         
       } catch (err) {
-        console.error('Failed to fetch album tracks:', err)
-        setError('アルバムの楽曲を取得できませんでした')
+        console.error('Failed to fetch album data:', err)
+        setError('アルバムの情報を取得できませんでした')
       } finally {
         setIsLoading(false)
       }
     }
 
-    fetchAlbumTracks()
+    fetchAlbumData()
   }, [albumId])
 
   const handleTrackSelect = async (track: TrackSuggestion) => {
@@ -115,31 +121,20 @@ export const AlbumDetailPage = () => {
       </div>
 
       <div className="album-header">
-        {album.images[0] && (
-          <img 
-            src={album.images[0].url} 
-            alt={`${album.name} album art`}
-            className="album-cover-large"
-          />
-        )}
-        
-        <div className="album-info">
-          <h1 className="album-title">💿 {album.name}</h1>
-          <p className="album-artist">
-            by{' '}
-            <span 
-              className="clickable-artist"
-              onClick={() => handleArtistClick(album.artists[0].id)}
-              title={`${album.artists[0].name}の楽曲一覧を見る`}
+        <h1 className="album-title">💿 {album.name}</h1>
+        <p className="album-artist">
+          <span 
+            className="clickable-artist"
+            onClick={() => handleArtistClick(album.artistId)}
+            title={`${album.artist}の楽曲一覧を見る`}
             >
-              {album.artists.map(artist => artist.name).join(', ')}
+              {album.artist}
             </span>
           </p>
           <p className="album-details">
             {new Date(album.release_date).getFullYear()}年 • {album.total_tracks}曲
           </p>
         </div>
-      </div>
 
       <div className="album-tracks-list">
         <h2 className="tracks-title">収録楽曲</h2>

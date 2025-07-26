@@ -36,11 +36,17 @@ export const HomePage = ({ userId }: HomePageProps) => {
           <div className="recent-playlists">
             {playlists?.slice(0, 3).map((playlist) => (
               <div key={playlist._id} className="recent-item">
+                {playlist.albumArt && (
+                  <img 
+                    src={playlist.albumArt} 
+                    alt={`${playlist.title} album art`}
+                    className="recent-album-art"
+                  />
+                )}
                 <div className="recent-info">
                   <h4>{playlist.title}</h4>
                   <p>{playlist.artist}</p>
                 </div>
-                <button className="play-btn-small">▶️</button>
               </div>
             ))}
           </div>
