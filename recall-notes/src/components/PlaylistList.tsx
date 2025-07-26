@@ -69,7 +69,7 @@ const PlaylistCard = ({ playlist }: PlaylistCardProps) => {
 }
 
 export const PlaylistList = ({ userId, searchQuery = '', sortBy = 'recent' }: PlaylistListProps) => {
-  const playlists = useQuery(api.playlists.getPlaylistsByUser, { userId })
+  const playlists = useQuery(api.functions.playlists.getPlaylistsByUser, { userId })
 
   if (playlists === undefined) {
     return <div className="loading">読み込み中...</div>

@@ -25,7 +25,7 @@ export class ConvexSpotifyService {
       console.log('Calling Convex Spotify search for tracks:', query, 'limit:', limit)
       console.log('Convex URL:', import.meta.env.VITE_CONVEX_URL)
       
-      const tracks = await convex.action(api.spotify.searchTracks, {
+      const tracks = await convex.action(api.functions.spotify.searchTracks, {
         query,
         limit
       })
@@ -55,7 +55,7 @@ export class ConvexSpotifyService {
       console.log('Calling Convex Spotify search for artists:', query, 'limit:', limit)
       console.log('Convex URL:', import.meta.env.VITE_CONVEX_URL)
       
-      const artists = await convex.action(api.spotify.searchArtists, {
+      const artists = await convex.action(api.functions.spotify.searchArtists, {
         query,
         limit
       })

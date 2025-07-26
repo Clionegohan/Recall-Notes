@@ -24,7 +24,7 @@ export const ArtistDetailPage = () => {
   const [addingTrackId, setAddingTrackId] = useState<string | null>(null)
   
   const tracksPerPage = 20
-  const addPlaylist = useMutation(api.playlists.addPlaylist)
+  const addPlaylist = useMutation(api.functions.playlists.addPlaylist)
 
   const fetchArtistTracks = async (page: number) => {
     if (!artistId) return

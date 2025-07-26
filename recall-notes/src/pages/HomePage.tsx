@@ -8,7 +8,7 @@ interface HomePageProps {
 }
 
 export const HomePage = ({ userId }: HomePageProps) => {
-  const playlists = useQuery(api.playlists.getPlaylistsByUser, { userId })
+  const playlists = useQuery(api.functions.playlists.getPlaylistsByUser, { userId })
   const playlistCount = playlists?.length ?? 0
 
   return (

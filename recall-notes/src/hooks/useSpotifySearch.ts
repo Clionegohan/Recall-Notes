@@ -26,7 +26,7 @@ export const useSpotifySearch = (
   } = options
 
   // Convex action for Spotify search
-  const searchTracks = useAction(api.spotify.searchTracks)
+  const searchTracks = useAction(api.functions.spotify.searchTracks)
 
   // 状態管理
   const [searchState, setSearchState] = useState<SearchState>({

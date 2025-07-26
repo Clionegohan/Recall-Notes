@@ -1,56 +1,7 @@
-import { action } from "./_generated/server";
+import { action } from "../_generated/server";
 import { v } from "convex/values";
-
-/**
- * Spotify Access Token管理
- */
-let cachedToken: string | null = null;
-let tokenExpiry: number = 0;
-
-async function getSpotifyAccessToken(): Promise<string> {
-  // キャッシュされたトークンが有効な場合は再利用
-  if (cachedToken && Date.now() < tokenExpiry) {
-    return cachedToken;
-  }
-
-  // Convex環境変数から取得
-  // @ts-expect-error Convex runtime provides process.env
-  const clientId = process.env.SPOTIFY_CLIENT_ID;
-  // @ts-expect-error Convex runtime provides process.env
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-  
-  console.log("Client ID available:", !!clientId);
-  console.log("Client Secret available:", !!clientSecret);
-
-  if (!clientId || !clientSecret) {
-    throw new Error("Spotify credentials not configured in Convex environment");
-  }
-
-  try {
-    const response = await fetch("https://accounts.spotify.com/api/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": `Basic ${btoa(`${clientId}:${clientSecret}`)}`
-      },
-      body: "grant_type=client_credentials"
-    });
-
-    if (!response.ok) {
-      throw new Error(`Spotify token request failed: ${response.status}`);
-    }
-
-    const data = await response.json();
-    cachedToken = data.access_token as string;
-    // 有効期限を少し早めに設定（安全マージン）
-    tokenExpiry = Date.now() + (data.expires_in - 300) * 1000;
-
-    return cachedToken;
-  } catch (error) {
-    console.error("Spotify token error:", error);
-    throw new Error("Failed to get Spotify access token");
-  }
-}
+import { getSpotifyAccessToken, calculateJapanesePreferenceScore } from "../lib/spotify";
+import type { SpotifyTrack, SpotifyArtist } from "../types/spotify";
 
 /**
  * 楽曲検索（Convex Action）
@@ -98,16 +49,23 @@ export const searchTracks = action({
 
       const data = await response.json();
       
-      // フロントエンド用の形式に変換
-      const tracks = data.tracks.items.map((track: any) => ({
-        id: track.id,
-        name: track.name,
-        artist: track.artists.map((artist: any) => artist.name).join(", "),
-        albumArt: track.album.images[0]?.url,
-        albumName: track.album.name,
-        albumId: track.album.id,
-        artistId: track.artists[0]?.id
-      }));
+      // フロントエンド用の形式に変換（日本語優先ソート付き）
+      const tracks = data.tracks.items
+        .map((track: any) => ({
+          id: track.id,
+          name: track.name,
+          artist: track.artists.map((artist: any) => artist.name).join(", "),
+          albumArt: track.album.images[0]?.url,
+          albumName: track.album.name,
+          albumId: track.album.id,
+          artistId: track.artists[0]?.id,
+          popularity: track.popularity
+        }))
+        .sort((a: any, b: any) => {
+          const scoreA = calculateJapanesePreferenceScore(a);
+          const scoreB = calculateJapanesePreferenceScore(b);
+          return scoreB - scoreA;
+        });
 
       return tracks;
     } catch (error) {
