@@ -1,4 +1,4 @@
-import type { TrackSuggestion } from '../types/spotify'
+import type { TrackSuggestion, SpotifyArtist } from '../types/spotify'
 
 // 除外キーワード（Spotify serviceと同じ）
 const EXCLUDED_KEYWORDS = [
@@ -146,25 +146,142 @@ export class MockSpotifySearchService {
       return !shouldExclude
     })
 
-    // 関連度順にソート（完全一致→前方一致→部分一致）
+    // 関連度順にソート（完全一致→前方一致→部分一致、日本コンテンツ優先）
     filteredResults.sort((a, b) => {
-      const aTrackExact = a.name.toLowerCase() === lowerQuery
-      const bTrackExact = b.name.toLowerCase() === lowerQuery
+      // 基本的な一致度スコア
+      const getMatchScore = (track: TrackSuggestion, query: string) => {
+        const trackName = track.name.toLowerCase()
+        const artistName = track.artist.toLowerCase()
+        const queryLower = query.toLowerCase()
+        
+        let score = 0
+        if (trackName === queryLower) score += 1000
+        else if (trackName.startsWith(queryLower)) score += 500
+        else if (trackName.includes(queryLower)) score += 200
+        
+        if (artistName === queryLower) score += 800
+        else if (artistName.startsWith(queryLower)) score += 400
+        else if (artistName.includes(queryLower)) score += 100
+        
+        // モックデータは全て日本コンテンツなので一律ボーナス
+        score += 300
+        
+        return score
+      }
       
-      if (aTrackExact && !bTrackExact) return -1
-      if (!aTrackExact && bTrackExact) return 1
+      const scoreA = getMatchScore(a, lowerQuery)
+      const scoreB = getMatchScore(b, lowerQuery)
       
-      const aTrackStarts = a.name.toLowerCase().startsWith(lowerQuery)
-      const bTrackStarts = b.name.toLowerCase().startsWith(lowerQuery)
-      
-      if (aTrackStarts && !bTrackStarts) return -1
-      if (!aTrackStarts && bTrackStarts) return 1
-      
-      return 0
+      return scoreB - scoreA
     })
 
 
     return filteredResults.slice(0, limit)
+  }
+
+  /**
+   * アーティスト検索（モック版）
+   */
+  static async searchArtists(
+    query: string,
+    limit: number = 10
+  ): Promise<SpotifyArtist[]> {
+    if (!query.trim()) {
+      return []
+    }
+
+    // 実際のAPI呼び出し時間をシミュレーション
+    const delay = Math.random() * 300 + 200
+    await new Promise(resolve => setTimeout(resolve, delay))
+
+    // モックアーティストデータ
+    const mockArtists: SpotifyArtist[] = [
+      {
+        id: 'artist-1',
+        name: '米津玄師',
+        type: 'artist',
+        uri: 'spotify:artist:mock1',
+        href: 'https://api.spotify.com/v1/artists/mock1',
+        images: [{ url: 'https://i.scdn.co/image/artist1.jpg', height: 640, width: 640 }],
+        followers: 5000000,
+        genres: ['j-pop']
+      },
+      {
+        id: 'artist-2', 
+        name: 'Official髭男dism',
+        type: 'artist',
+        uri: 'spotify:artist:mock2',
+        href: 'https://api.spotify.com/v1/artists/mock2',
+        images: [{ url: 'https://i.scdn.co/image/artist2.jpg', height: 640, width: 640 }],
+        followers: 3000000,
+        genres: ['j-pop', 'rock']
+      },
+      {
+        id: 'artist-3',
+        name: 'あいみょん',
+        type: 'artist',
+        uri: 'spotify:artist:mock3', 
+        href: 'https://api.spotify.com/v1/artists/mock3',
+        images: [{ url: 'https://i.scdn.co/image/artist3.jpg', height: 640, width: 640 }],
+        followers: 2500000,
+        genres: ['j-pop', 'folk']
+      }
+    ]
+
+    const lowerQuery = query.toLowerCase()
+    return mockArtists.filter(artist => 
+      artist.name.toLowerCase().includes(lowerQuery)
+    ).slice(0, limit)
+  }
+
+  /**
+   * アーティストの楽曲一覧取得（モック版）
+   */
+  static async getArtistTracks(
+    _artistId: string,
+    offset: number = 0,
+    limit: number = 20
+  ) {
+    // 実際のAPI呼び出し時間をシミュレーション
+    const delay = Math.random() * 500 + 300
+    await new Promise(resolve => setTimeout(resolve, delay))
+
+    // アーティストIDに基づいて楽曲をフィルタリング
+    const artistTracks = MOCK_TRACKS.filter(track => 
+      track.artist === '米津玄師' || track.artist === 'Official髭男dism' || track.artist === 'あいみょん'
+    )
+
+    const paginatedTracks = artistTracks.slice(offset, offset + limit)
+    
+    return {
+      tracks: paginatedTracks,
+      total: artistTracks.length,
+      hasMore: offset + limit < artistTracks.length
+    }
+  }
+
+  /**
+   * アルバムの楽曲一覧取得（モック版）
+   */
+  static async getAlbumTracks(albumId: string) {
+    // 実際のAPI呼び出し時間をシミュレーション
+    const delay = Math.random() * 400 + 200
+    await new Promise(resolve => setTimeout(resolve, delay))
+
+    // アルバムの楽曲（サンプル）
+    const albumTracks = MOCK_TRACKS.slice(0, 5)
+    
+    // モックアルバム情報
+    const album = {
+      id: albumId,
+      name: 'Sample Album',
+      artists: [{ name: '米津玄師', id: 'artist-1' }],
+      images: [{ url: 'https://i.scdn.co/image/album.jpg' }],
+      release_date: '2023-01-01',
+      total_tracks: albumTracks.length
+    }
+
+    return { tracks: albumTracks, album }
   }
 
 }
@@ -172,6 +289,10 @@ export class MockSpotifySearchService {
 // シンプルな検索関数（モック版）
 export const searchMockSpotifyTracks = (query: string, limit?: number) => {
   return MockSpotifySearchService.searchTracks(query, limit)
+}
+
+export const searchMockSpotifyArtists = (query: string, limit?: number) => {
+  return MockSpotifySearchService.searchArtists(query, limit)
 }
 
 // 開発環境判定

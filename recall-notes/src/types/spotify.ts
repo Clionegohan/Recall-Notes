@@ -11,6 +11,9 @@ export interface SpotifyArtist {
   type: 'artist'
   uri: string
   href: string
+  images?: SpotifyImage[]
+  followers?: number
+  genres?: string[]
 }
 
 export interface SpotifyAlbum {
@@ -56,6 +59,7 @@ export interface TrackSuggestion {
   albumId?: string
   artistId?: string
   popularity?: number
+  releaseDate?: string
 }
 
 // 検索状態管理用

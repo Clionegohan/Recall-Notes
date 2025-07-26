@@ -1,75 +1,67 @@
 import { useState } from 'react'
 import { useMutation } from 'convex/react'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../../convex/_generated/api'
 import type { Id } from '../../convex/_generated/dataModel'
-import type { PlaylistFormData } from '../types'
-import type { TrackSuggestion } from '../types/spotify'
+import type { TrackSuggestion, SpotifyArtist } from '../types/spotify'
 import { SearchInput } from './SearchInput'
+import { ArtistSearchInput } from './ArtistSearchInput'
 
 interface PlaylistFormProps {
   userId: Id<"users">
-  onError: (error: string) => void
+  onError?: (message: string) => void
   onSuccess?: () => void
 }
 
 export const PlaylistForm = ({ userId, onError, onSuccess }: PlaylistFormProps) => {
-  const [formData, setFormData] = useState<PlaylistFormData>({
-    title: '',
-    artist: ''
-  })
   const [selectedTrack, setSelectedTrack] = useState<TrackSuggestion | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [searchMode, setSearchMode] = useState<'track' | 'artist'>('track')
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   
-  const addPlaylist = useMutation(api.playlists.addPlaylist)
-
-  const handleInputChange = (field: keyof PlaylistFormData) => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: e.target.value
-    }))
-  }
+  const navigate = useNavigate()
+  const addPlaylist = useMutation(api["functions/playlists"].addPlaylist)
 
   const handleTrackSelect = (track: TrackSuggestion) => {
     setSelectedTrack(track)
-    setFormData({
-      title: track.name,
-      artist: track.artist
-    })
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!formData.title || !formData.artist) {
-      onError("曲名とアーティスト名を入力してください")
-      return
-    }
+  const handleArtistSelect = (artist: SpotifyArtist) => {
+    // アーティスト詳細ページに遷移
+    navigate(`/artist/${artist.id}`)
+  }
 
-    setIsSubmitting(true)
+  const handleDirectAdd = async () => {
+    if (!selectedTrack) return
+
     try {
+      setIsSubmitting(true)
+      setSuccessMessage(null) // 前の成功メッセージをクリア
+      
       await addPlaylist({
-        title: formData.title,
-        artist: formData.artist,
+        title: selectedTrack.name,
+        artist: selectedTrack.artist,
         userId,
-        albumArt: selectedTrack?.albumArt,
-        albumName: selectedTrack?.albumName,
-        albumId: selectedTrack?.albumId,
-        artistId: selectedTrack?.artistId,
-        spotifyId: selectedTrack?.id
+        albumArt: selectedTrack.albumArt,
+        albumName: selectedTrack.albumName,
+        albumId: selectedTrack.albumId,
+        artistId: selectedTrack.artistId,
+        spotifyId: selectedTrack.id
       })
       
-      setFormData({
-        title: '',
-        artist: ''
-      })
+      // 成功時の処理
+      const successMsg = `「${selectedTrack.name}」をプレイリストに追加しました！`
+      setSuccessMessage(successMsg)
       setSelectedTrack(null)
+      
+      // 3秒後に成功メッセージをクリア
+      setTimeout(() => setSuccessMessage(null), 3000)
       
       onSuccess?.()
     } catch (err) {
-      console.error("プレイリスト追加エラー:", err)
-      onError("プレイリストの追加に失敗しました")
+      console.error('Failed to add playlist:', err)
+      const errorMessage = err instanceof Error ? err.message : 'プレイリストの追加に失敗しました'
+      onError?.(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
@@ -77,71 +69,81 @@ export const PlaylistForm = ({ userId, onError, onSuccess }: PlaylistFormProps) 
 
   return (
     <section className="add-playlist-section">
-      <h2>新しいプレイリストを追加</h2>
-      <form onSubmit={handleSubmit} className="playlist-form">
+      <h2>楽曲検索・アーティスト検索</h2>
+      
+      {successMessage && (
+        <div className="notification success">
+          {successMessage}
+        </div>
+      )}
+      
+      <div className="search-mode-tabs">
+        <button
+          className={`tab-button ${searchMode === 'track' ? 'active' : ''}`}
+          onClick={() => setSearchMode('track')}
+        >
+          🎵 楽曲検索
+        </button>
+        <button
+          className={`tab-button ${searchMode === 'artist' ? 'active' : ''}`}
+          onClick={() => setSearchMode('artist')}
+        >
+          🎤 アーティスト検索
+        </button>
+      </div>
+
+      {searchMode === 'track' ? (
         <div className="form-group">
-          <label htmlFor="search">楽曲を検索</label>
           <SearchInput
-            id="search"
-            placeholder="楽曲名またはアーティスト名を入力してください"
+            id="track-search"
+            placeholder="楽曲名を入力してください"
             onTrackSelect={handleTrackSelect}
             disabled={isSubmitting}
           />
         </div>
-        
-        {selectedTrack && (
-          <div className="selected-track">
-            <h4>選択された楽曲:</h4>
-            <div className="track-info">
-              {selectedTrack.albumArt && (
-                <img 
-                  src={selectedTrack.albumArt} 
-                  alt={`${selectedTrack.name} album art`}
-                  className="selected-track-art"
-                />
-              )}
-              <div>
-                <div className="track-name">{selectedTrack.name}</div>
-                <div className="track-artist">{selectedTrack.artist}</div>
-              </div>
+      ) : (
+        <div className="form-group">
+          <ArtistSearchInput
+            id="artist-search"
+            placeholder="アーティスト名を入力してください"
+            onArtistSelect={handleArtistSelect}
+            disabled={isSubmitting}
+          />
+        </div>
+      )}
+      
+      {searchMode === 'track' && selectedTrack && (
+        <div className="selected-track">
+          <h4>選択された楽曲:</h4>
+          <div className="track-info">
+            {selectedTrack.albumArt && (
+              <img 
+                src={selectedTrack.albumArt} 
+                alt={`${selectedTrack.name} album art`}
+                className="selected-track-art"
+              />
+            )}
+            <div>
+              <div className="track-name">{selectedTrack.name}</div>
+              <div className="track-artist">{selectedTrack.artist}</div>
             </div>
           </div>
-        )}
-        
-        <div className="form-group">
-          <label htmlFor="title">曲名 (手動入力も可能)</label>
-          <input
-            id="title"
-            type="text"
-            value={formData.title}
-            onChange={handleInputChange('title')}
-            placeholder="曲名を入力してください"
-            required
+          
+          <button 
+            onClick={handleDirectAdd}
+            className="submit-btn"
             disabled={isSubmitting}
-          />
+          >
+            {isSubmitting ? '追加中...' : 'プレイリストに追加'}
+          </button>
         </div>
-        
-        <div className="form-group">
-          <label htmlFor="artist">アーティスト (手動入力も可能)</label>
-          <input
-            id="artist"
-            type="text"
-            value={formData.artist}
-            onChange={handleInputChange('artist')}
-            placeholder="アーティスト名を入力してください"
-            required
-            disabled={isSubmitting}
-          />
+      )}
+
+      {searchMode === 'artist' && (
+        <div className="search-hint">
+          <p>アーティストを選択すると、そのアーティストの楽曲一覧ページに移動します</p>
         </div>
-        
-        <button 
-          type="submit" 
-          className="submit-btn"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? '追加中...' : 'プレイリストに追加'}
-        </button>
-      </form>
+      )}
     </section>
   )
 }

@@ -425,6 +425,12 @@
   color: #e53e3e;
 }
 
+.notification.success {
+  background: #f0fff4;
+  border: 1px solid #9ae6b4;
+  color: #38a169;
+}
+
 @media (max-width: 768px) {
   .app-header h1 {
     font-size: 2.5rem;
@@ -916,4 +922,113 @@
 /* 検索入力の上位コンテナでの調整 */
 .form-group .search-input-container {
   margin-top: 0.5rem;
+}
+
+/* 検索モードタブ */
+.search-mode-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #e1e5e9;
+}
+
+.tab-button {
+  background: transparent;
+  border: none;
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #666;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.tab-button.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+}
+
+/* 検索ヒント */
+.search-hint {
+  background: #f8f9fa;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.search-hint p {
+  margin: 0;
+  color: #666;
+  font-size: 1rem;
+}
+
+/* プレイリストコントロール */
+.playlist-controls {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  align-items: end;
+}
+
+.search-container {
+  flex: 1;
+}
+
+.search-container .search-input {
+  width: 100%;
+}
+
+.sort-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sort-container label {
+  font-weight: 600;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.sort-select {
+  padding: 0.75rem;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sort-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.playlist-count {
+  margin-bottom: 1rem;
+  color: #666;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .playlist-controls {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .sort-container {
+    align-self: stretch;
+  }
 }

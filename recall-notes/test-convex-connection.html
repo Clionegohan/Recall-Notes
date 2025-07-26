@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Convex Connection Test</title>
+</head>
+<body>
+    <h1>Convex Spotify API Connection Test</h1>
+    <button onclick="testTrackSearch()">Test Track Search</button>
+    <button onclick="testArtistSearch()">Test Artist Search</button>
+    <div id="results"></div>
+
+    <script type="module">
+        import { ConvexHttpClient } from "https://cdn.skypack.dev/convex/browser";
+
+        const CONVEX_URL = "https://fine-dalmatian-772.convex.cloud";
+        const convex = new ConvexHttpClient(CONVEX_URL);
+
+        window.testTrackSearch = async function() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Testing track search...</p>';
+            
+            try {
+                console.log('Testing Convex track search...');
+                
+                // Manually build the action call
+                const response = await fetch(`${CONVEX_URL}/api/actions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        path: "spotify:searchTracks",
+                        args: { query: "test", limit: 3 }
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Response:', data);
+                
+                if (data.success) {
+                    results.innerHTML = `<h3>✅ Track Search Success</h3><pre>${JSON.stringify(data.value, null, 2)}</pre>`;
+                } else {
+                    results.innerHTML = `<h3>❌ Track Search Error</h3><pre>${JSON.stringify(data.error, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                console.error('Track search error:', error);
+                results.innerHTML = `<h3>❌ Connection Error</h3><p>${error.message}</p>`;
+            }
+        };
+
+        window.testArtistSearch = async function() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Testing artist search...</p>';
+            
+            try {
+                console.log('Testing Convex artist search...');
+                
+                const response = await fetch(`${CONVEX_URL}/api/actions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        path: "spotify:searchArtists",
+                        args: { query: "beyonce", limit: 3 }
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Response:', data);
+                
+                if (data.success) {
+                    results.innerHTML = `<h3>✅ Artist Search Success</h3><pre>${JSON.stringify(data.value, null, 2)}</pre>`;
+                } else {
+                    results.innerHTML = `<h3>❌ Artist Search Error</h3><pre>${JSON.stringify(data.error, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                console.error('Artist search error:', error);
+                results.innerHTML = `<h3>❌ Connection Error</h3><p>${error.message}</p>`;
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useMutation } from 'convex/react'
 import { getArtistTracks } from '../services/spotify'
 import { LoadingSpinner } from '../components/LoadingSpinner'
 import { ErrorMessage } from '../components/ErrorMessage'
 import { Pagination } from '../components/Pagination'
+import { api } from '../../convex/_generated/api'
+import { useUser } from '../hooks/useUser'
 import type { TrackSuggestion } from '../types/spotify'
 
 export const ArtistDetailPage = () => {
   const { artistId } = useParams<{ artistId: string }>()
   const navigate = useNavigate()
+  const { currentUserId } = useUser()
   
   const [tracks, setTracks] = useState<TrackSuggestion[]>([])
   const [artistName, setArtistName] = useState<string>('')
@@ -17,8 +21,10 @@ export const ArtistDetailPage = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalTracks, setTotalTracks] = useState(0)
   const [hasMoreTracks, setHasMoreTracks] = useState(false)
+  const [addingTrackId, setAddingTrackId] = useState<string | null>(null)
   
   const tracksPerPage = 20
+  const addPlaylist = useMutation(api["functions/playlists"].addPlaylist)
 
   const fetchArtistTracks = async (page: number) => {
     if (!artistId) return
@@ -57,8 +63,34 @@ export const ArtistDetailPage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const handleTrackSelect = (_track: TrackSuggestion) => {
-    // TODO: プレイリストに追加する機能
+  const handleTrackSelect = async (track: TrackSuggestion) => {
+    if (!currentUserId) {
+      alert('プレイリストに追加するにはログインが必要です')
+      return
+    }
+
+    try {
+      setAddingTrackId(track.id)
+      
+      await addPlaylist({
+        title: track.name,
+        artist: track.artist,
+        userId: currentUserId,
+        albumArt: track.albumArt,
+        albumName: track.albumName,
+        albumId: track.albumId,
+        artistId: track.artistId,
+        spotifyId: track.id
+      })
+
+      alert(`「${track.name}」をプレイリストに追加しました！`)
+    } catch (error) {
+      console.error('Failed to add track to playlist:', error)
+      const errorMessage = error instanceof Error ? error.message : 'プレイリストへの追加に失敗しました'
+      alert(errorMessage)
+    } finally {
+      setAddingTrackId(null)
+    }
   }
 
   const handleAlbumClick = (albumId: string) => {
@@ -122,8 +154,9 @@ export const ArtistDetailPage = () => {
               className="add-track-button"
               onClick={() => handleTrackSelect(track)}
               title="プレイリストに追加"
+              disabled={addingTrackId === track.id}
             >
-              ➕
+              {addingTrackId === track.id ? '...' : '➕'}
             </button>
           </div>
         ))}

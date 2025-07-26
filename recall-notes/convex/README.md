@@ -1,7 +1,40 @@
-# Welcome to your Convex functions directory!
+# Convex Backend for Recall Notes
 
-Write your Convex functions here.
-See https://docs.convex.dev/functions for more.
+Music playlist management application backend using Convex.
+
+## Directory Structure
+
+```
+convex/
+├── functions/          # Main business logic functions
+│   ├── index.ts       # Function exports index
+│   ├── spotify.ts     # Spotify API integration actions
+│   ├── playlists.ts   # Playlist CRUD operations
+│   └── users.ts       # User management
+├── lib/               # Shared utility functions
+│   └── spotify.ts     # Spotify API helpers & auth
+├── types/             # Type definitions
+│   └── spotify.ts     # Spotify-related types
+├── schema.ts          # Database schema definition
+└── _generated/        # Auto-generated files
+```
+
+## Usage
+
+Import functions in React components:
+
+```ts
+import { api } from '../convex/_generated/api'
+
+// Query example
+const playlists = useQuery(api.functions.playlists.getPlaylistsByUser, { userId })
+
+// Mutation example  
+const addPlaylist = useMutation(api.functions.playlists.addPlaylist)
+
+// Action example
+const searchTracks = useAction(api.functions.spotify.searchTracks)
+```
 
 A query function that takes two arguments looks like:
 

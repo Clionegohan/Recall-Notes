@@ -1,15 +1,21 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAction } from 'convex/react'
 import { useDebounce } from './useDebounce'
-import { searchMockSpotifyTracks } from '../services/mockSpotify'
+import { searchMockSpotifyArtists } from '../services/mockSpotify'
 import { api } from '../../convex/_generated/api'
-import type { TrackSuggestion, SearchState } from '../types/spotify'
+import type { SpotifyArtist } from '../types/spotify'
+
+interface ArtistSearchState {
+  query: string
+  artists: SpotifyArtist[]
+  isLoading: boolean
+  error: string | null
+}
 
 /**
- * Spotify楽曲検索のカスタムフック
- * デバウンス機能とキャッシュ機能を内蔵
+ * Spotifyアーティスト検索のカスタムフック
  */
-export const useSpotifySearch = (
+export const useSpotifyArtistSearch = (
   query: string,
   options: {
     debounceMs?: number
@@ -25,19 +31,19 @@ export const useSpotifySearch = (
     enableCache = true
   } = options
 
-  // Convex action for Spotify search
-  const searchTracks = useAction(api["functions/spotify"].searchTracks)
+  // Convex action for Spotify artist search
+  const searchArtists = useAction(api["functions/spotify"].searchArtists)
 
   // 状態管理
-  const [searchState, setSearchState] = useState<SearchState>({
+  const [searchState, setSearchState] = useState<ArtistSearchState>({
     query: '',
-    suggestions: [],
+    artists: [],
     isLoading: false,
     error: null
   })
 
   // 簡単なキャッシュ実装
-  const [cache] = useState(() => new Map<string, TrackSuggestion[]>())
+  const [cache] = useState(() => new Map<string, SpotifyArtist[]>())
 
   // デバウンスされたクエリ
   const debouncedQuery = useDebounce(query.trim(), debounceMs)
@@ -47,7 +53,7 @@ export const useSpotifySearch = (
     if (searchQuery.length < minQueryLength) {
       setSearchState(prev => ({
         ...prev,
-        suggestions: [],
+        artists: [],
         isLoading: false,
         error: null
       }))
@@ -59,7 +65,7 @@ export const useSpotifySearch = (
       const cachedResults = cache.get(searchQuery)!
       setSearchState(prev => ({
         ...prev,
-        suggestions: cachedResults,
+        artists: cachedResults,
         isLoading: false,
         error: null
       }))
@@ -74,10 +80,10 @@ export const useSpotifySearch = (
     }))
 
     try {
-      console.log('Starting Spotify search for:', searchQuery)
+      console.log('Starting Spotify artist search for:', searchQuery)
       // Convex action経由でSpotify APIを呼び出し
-      const results = await searchTracks({ query: searchQuery, limit }) as TrackSuggestion[]
-      console.log('Spotify search results:', results.length, 'tracks')
+      const results = await searchArtists({ query: searchQuery, limit }) as SpotifyArtist[]
+      console.log('Spotify artist search results:', results.length, 'artists')
       
       // キャッシュに保存
       if (enableCache) {
@@ -86,18 +92,18 @@ export const useSpotifySearch = (
 
       setSearchState(prev => ({
         ...prev,
-        suggestions: results,
+        artists: results,
         isLoading: false,
         error: null
       }))
 
     } catch (error) {
-      console.error('Spotify search error:', error)
+      console.error('Spotify artist search error:', error)
       // エラー時はモックデータにフォールバック
       console.log('Falling back to mock data')
       try {
-        const mockResults = await searchMockSpotifyTracks(searchQuery, limit)
-        console.log('Mock search results:', mockResults.length, 'tracks')
+        const mockResults = await searchMockSpotifyArtists(searchQuery, limit)
+        console.log('Mock artist search results:', mockResults.length, 'artists')
         
         if (enableCache) {
           cache.set(searchQuery, mockResults)
@@ -105,21 +111,21 @@ export const useSpotifySearch = (
 
         setSearchState(prev => ({
           ...prev,
-          suggestions: mockResults,
+          artists: mockResults,
           isLoading: false,
           error: null
         }))
       } catch (mockError) {
-        console.error('Mock search also failed:', mockError)
+        console.error('Mock artist search also failed:', mockError)
         setSearchState(prev => ({
           ...prev,
-          suggestions: [],
+          artists: [],
           isLoading: false,
-          error: '検索エラーが発生しました'
+          error: 'アーティスト検索エラーが発生しました'
         }))
       }
     }
-  }, [cache, enableCache, limit, minQueryLength, searchTracks])
+  }, [cache, enableCache, limit, minQueryLength, searchArtists])
 
   // デバウンスされたクエリに基づいて検索実行
   useEffect(() => {
@@ -131,19 +137,8 @@ export const useSpotifySearch = (
 
   return {
     // 検索結果と状態
-    suggestions: searchState.suggestions,
+    artists: searchState.artists,
     isLoading: searchState.isLoading,
     error: searchState.error
   }
-}
-
-/**
- * より簡単な検索フック（基本機能のみ）
- */
-export const useSimpleSpotifySearch = (query: string) => {
-  return useSpotifySearch(query, {
-    debounceMs: 300,
-    limit: 8,
-    minQueryLength: 2
-  })
 }
