@@ -18,6 +18,7 @@ export const PlaylistForm = ({ userId, onError, onSuccess }: PlaylistFormProps) 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [searchMode, setSearchMode] = useState<'track' | 'artist'>('track')
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [clearTrigger, setClearTrigger] = useState(0)
   
   const navigate = useNavigate()
   const addPlaylist = useMutation(api["functions/playlists"].addPlaylist)
@@ -53,6 +54,9 @@ export const PlaylistForm = ({ userId, onError, onSuccess }: PlaylistFormProps) 
       const successMsg = `「${selectedTrack.name}」をプレイリストに追加しました！`
       setSuccessMessage(successMsg)
       setSelectedTrack(null)
+      
+      // 検索フィールドをクリア
+      setClearTrigger(prev => prev + 1)
       
       // 3秒後に成功メッセージをクリア
       setTimeout(() => setSuccessMessage(null), 3000)
@@ -99,6 +103,7 @@ export const PlaylistForm = ({ userId, onError, onSuccess }: PlaylistFormProps) 
             placeholder="楽曲名を入力してください"
             onTrackSelect={handleTrackSelect}
             disabled={isSubmitting}
+            clearTrigger={clearTrigger}
           />
         </div>
       ) : (

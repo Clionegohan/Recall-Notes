@@ -10,6 +10,7 @@ interface SearchInputProps {
   value?: string
   onChange?: (value: string) => void
   id?: string
+  clearTrigger?: number
 }
 
 export const SearchInput = ({
@@ -19,7 +20,8 @@ export const SearchInput = ({
   className = "",
   value: controlledValue,
   onChange: onControlledChange,
-  id
+  id,
+  clearTrigger
 }: SearchInputProps) => {
   // 内部状態（非制御時）
   const [internalValue, setInternalValue] = useState('')
@@ -98,6 +100,19 @@ export const SearchInput = ({
         break
     }
   }
+  
+  // clearTriggerが変更されたときに検索をクリア
+  useEffect(() => {
+    if (clearTrigger !== undefined && clearTrigger > 0) {
+      if (isControlled) {
+        onControlledChange?.('')
+      } else {
+        setInternalValue('')
+      }
+      setShowSuggestions(false)
+      setSelectedIndex(-1)
+    }
+  }, [clearTrigger, isControlled, onControlledChange])
   
   // 外部クリックで候補を非表示
   useEffect(() => {

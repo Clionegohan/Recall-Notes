@@ -34,7 +34,6 @@ const PlaylistCard = ({ playlist }: PlaylistCardProps) => {
       <div className="playlist-info">
         <h3 className="playlist-title">{playlist.title}</h3>
         <p className="playlist-artist">
-          by{' '}
           {playlist.artistId ? (
             <span 
               className="clickable-artist"
@@ -47,9 +46,6 @@ const PlaylistCard = ({ playlist }: PlaylistCardProps) => {
             playlist.artist
           )}
         </p>
-        {playlist.spotifyId && (
-          <p className="playlist-spotify">Spotify: {playlist.spotifyId}</p>
-        )}
       </div>
       {playlist.albumArt && (
         <div 

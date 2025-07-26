@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useMutation } from 'convex/react'
-import { getArtistTracks } from '../services/spotify'
+import { useMutation, useAction } from 'convex/react'
 import { LoadingSpinner } from '../components/LoadingSpinner'
 import { ErrorMessage } from '../components/ErrorMessage'
 import { Pagination } from '../components/Pagination'
 import { api } from '../../convex/_generated/api'
 import { useUser } from '../hooks/useUser'
-import type { TrackSuggestion } from '../types/spotify'
+import type { TrackSuggestion, SpotifyArtist } from '../types/spotify'
 
 export const ArtistDetailPage = () => {
   const { artistId } = useParams<{ artistId: string }>()
@@ -15,7 +14,7 @@ export const ArtistDetailPage = () => {
   const { currentUserId } = useUser()
   
   const [tracks, setTracks] = useState<TrackSuggestion[]>([])
-  const [artistName, setArtistName] = useState<string>('')
+  const [artist, setArtist] = useState<SpotifyArtist | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
@@ -25,36 +24,37 @@ export const ArtistDetailPage = () => {
   
   const tracksPerPage = 20
   const addPlaylist = useMutation(api["functions/playlists"].addPlaylist)
+  const getArtistDetails = useAction(api["functions/spotify"].getArtistDetails)
+  const getArtistTracks = useAction(api["functions/spotify"].getArtistTracks)
 
-  const fetchArtistTracks = async (page: number) => {
+  const fetchArtistData = async () => {
     if (!artistId) return
 
     try {
       setIsLoading(true)
       setError(null)
       
-      const offset = (page - 1) * tracksPerPage
-      const result = await getArtistTracks(artistId, offset, tracksPerPage)
+      // アーティスト詳細と楽曲を並行して取得
+      const [artistDetails, tracksResult] = await Promise.all([
+        getArtistDetails({ artistId }),
+        getArtistTracks({ artistId, offset: (currentPage - 1) * tracksPerPage, limit: tracksPerPage })
+      ])
       
-      setTracks(result.tracks)
-      setTotalTracks(result.total)
-      setHasMoreTracks(result.hasMore)
-      
-      // アーティスト名を最初の楽曲から取得
-      if (result.tracks.length > 0) {
-        setArtistName(result.tracks[0].artist)
-      }
+      setArtist(artistDetails as SpotifyArtist)
+      setTracks(tracksResult.tracks)
+      setTotalTracks(tracksResult.total)
+      setHasMoreTracks(tracksResult.hasMore)
       
     } catch (err) {
-      console.error('Failed to fetch artist tracks:', err)
-      setError('アーティストの楽曲を取得できませんでした')
+      console.error('Failed to fetch artist data:', err)
+      setError('アーティストの情報を取得できませんでした')
     } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchArtistTracks(currentPage)
+    fetchArtistData()
   }, [artistId, currentPage])
 
   const handlePageChange = (page: number) => {
@@ -122,8 +122,16 @@ export const ArtistDetailPage = () => {
         <button onClick={() => navigate(-1)} className="back-button">
           ← 戻る
         </button>
-        <h1 className="page-title">🎤 {artistName}</h1>
-        <p className="page-subtitle">楽曲一覧</p>
+        
+        {artist && (
+          <>
+            <h1 className="page-title">🎤 {artist.name}</h1>
+            {artist.genres && artist.genres.length > 0 && (
+              <p className="artist-genres">ジャンル: {artist.genres.join(', ')}</p>
+            )}
+            <p className="page-subtitle">楽曲一覧 ({totalTracks}曲)</p>
+          </>
+        )}
       </div>
 
       <div className="artist-tracks-grid">
