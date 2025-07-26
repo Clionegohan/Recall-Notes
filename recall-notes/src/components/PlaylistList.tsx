@@ -6,6 +6,8 @@ import type { Playlist } from '../types'
 
 interface PlaylistListProps {
   userId: Id<"users">
+  searchQuery?: string
+  sortBy?: 'recent' | 'title' | 'artist'
 }
 
 interface PlaylistCardProps {
@@ -66,38 +68,61 @@ const PlaylistCard = ({ playlist }: PlaylistCardProps) => {
   )
 }
 
-export const PlaylistList = ({ userId }: PlaylistListProps) => {
+export const PlaylistList = ({ userId, searchQuery = '', sortBy = 'recent' }: PlaylistListProps) => {
   const playlists = useQuery(api.playlists.getPlaylistsByUser, { userId })
 
   if (playlists === undefined) {
-    return (
-      <section className="playlists-section">
-        <h2>あなたのプレイリスト</h2>
-        <div className="loading">読み込み中...</div>
-      </section>
-    )
+    return <div className="loading">読み込み中...</div>
   }
+
+  // 検索フィルタリング
+  const filteredPlaylists = playlists.filter(playlist => {
+    if (!searchQuery) return true
+    const query = searchQuery.toLowerCase()
+    return (
+      playlist.title.toLowerCase().includes(query) ||
+      playlist.artist.toLowerCase().includes(query)
+    )
+  })
+
+  // ソート
+  const sortedPlaylists = [...filteredPlaylists].sort((a, b) => {
+    switch (sortBy) {
+      case 'title':
+        return a.title.localeCompare(b.title, 'ja')
+      case 'artist':
+        return a.artist.localeCompare(b.artist, 'ja')
+      case 'recent':
+      default:
+        return new Date(b._creationTime).getTime() - new Date(a._creationTime).getTime()
+    }
+  })
 
   if (playlists.length === 0) {
     return (
-      <section className="playlists-section">
-        <h2>あなたのプレイリスト</h2>
-        <div className="empty-state">
-          <p>まだプレイリストがありません。</p>
-          <p>上のフォームから最初の曲を追加してみましょう！</p>
-        </div>
-      </section>
+      <div className="empty-state">
+        <p>まだプレイリストがありません。</p>
+        <p>楽曲を検索して最初の曲を追加してみましょう！</p>
+      </div>
+    )
+  }
+
+  if (filteredPlaylists.length === 0) {
+    return (
+      <div className="empty-state">
+        <p>「{searchQuery}」に一致するプレイリストが見つかりませんでした。</p>
+      </div>
     )
   }
 
   return (
-    <section className="playlists-section">
-      <h2>あなたのプレイリスト ({playlists.length}曲)</h2>
+    <>
+      <p className="playlist-count">{sortedPlaylists.length}曲のプレイリスト</p>
       <div className="playlists-grid">
-        {playlists.map((playlist) => (
+        {sortedPlaylists.map((playlist) => (
           <PlaylistCard key={playlist._id} playlist={playlist} />
         ))}
       </div>
-    </section>
+    </>
   )
 }
