@@ -5,6 +5,8 @@ import { LoadingSpinner } from './components/LoadingSpinner'
 import { HomePage } from './pages/HomePage'
 import { PlaylistsPage } from './pages/PlaylistsPage'
 import { AddPlaylistPage } from './pages/AddPlaylistPage'
+import { ArtistDetailPage } from './pages/ArtistDetailPage'
+import { AlbumDetailPage } from './pages/AlbumDetailPage'
 import { useUser } from './hooks/useUser'
 import './App.css'
 
@@ -26,6 +28,8 @@ function App() {
           <Route path="/" element={<HomePage userId={currentUserId} />} />
           <Route path="/playlists" element={<PlaylistsPage userId={currentUserId} />} />
           <Route path="/add" element={<AddPlaylistPage userId={currentUserId} />} />
+          <Route path="/artist/:artistId" element={<ArtistDetailPage />} />
+          <Route path="/album/:albumId" element={<AlbumDetailPage />} />
         </Routes>
       </Layout>
     </Router>

@@ -18,6 +18,10 @@ export type Playlist = {
   artist: string
   userId: string
   spotifyId?: string
+  albumArt?: string
+  albumName?: string
+  albumId?: string
+  artistId?: string
 }
 
 export type PlaylistFormData = {

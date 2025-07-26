@@ -46,6 +46,45 @@
   padding-bottom: 0.5rem;
 }
 
+/* Selected Track Display */
+.selected-track {
+  background: #f8f9fa;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.selected-track h4 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  font-size: 1rem;
+}
+
+.track-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.selected-track-art {
+  width: 50px;
+  height: 50px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.track-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 1rem;
+}
+
+.track-artist {
+  color: #666;
+  font-size: 0.9rem;
+}
+
 .playlist-form {
   display: grid;
   gap: 1.5rem;
@@ -152,6 +191,9 @@
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .playlist-card::before {
@@ -170,7 +212,7 @@
 }
 
 .playlist-info {
-  margin-bottom: 1rem;
+  flex: 1;
 }
 
 .playlist-title {
@@ -188,6 +230,15 @@
   font-style: italic;
 }
 
+.clickable-artist {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.clickable-artist:hover {
+  opacity: 0.7;
+}
+
 .playlist-spotify {
   font-size: 0.9rem;
   color: #888;
@@ -198,30 +249,27 @@
   display: inline-block;
 }
 
-.playlist-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.play-btn {
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #1db954 0%, #1ed760 100%);
-  color: white;
-  border: none;
-  border-radius: 20px;
-  font-size: 1rem;
-  font-weight: 600;
+/* Album Art Styles */
+.playlist-album-art {
+  flex-shrink: 0;
+  margin-left: 1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
-.play-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(29, 185, 84, 0.3);
+.album-art-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease, opacity 0.2s ease;
 }
+
+.playlist-album-art:hover .album-art-image {
+  transform: scale(1.05);
+  opacity: 0.8;
+}
+
 
 /* Navigation Styles */
 .navigation {
@@ -350,15 +398,6 @@
   font-style: italic;
 }
 
-.play-btn-small {
-  padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, #1db954 0%, #1ed760 100%);
-  color: white;
-  border: none;
-  border-radius: 15px;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
 
 .view-all-link {
   color: #667eea;
@@ -420,4 +459,461 @@
   .action-buttons {
     grid-template-columns: 1fr;
   }
+}
+
+/* Search Input Styles */
+.search-input-container {
+  position: relative;
+  width: 100%;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  width: 100%;
+  padding: 1rem 3rem 1rem 1rem;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.search-loading {
+  position: absolute;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.search-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e1e5e9;
+  border-top: 2px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.search-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 4px;
+}
+
+.search-suggestion-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.search-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.search-suggestion-item:hover,
+.search-suggestion-item.selected {
+  background-color: #f8f9fa;
+}
+
+.suggestion-album-art {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  margin-right: 0.75rem;
+  object-fit: cover;
+}
+
+.suggestion-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.suggestion-track-name {
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 0.25rem;
+}
+
+.suggestion-artist-name {
+  font-size: 0.9rem;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* Detail Pages Styles */
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-title {
+  font-size: 2.5rem;
+  color: #333;
+  margin: 0.5rem 0;
+}
+
+.page-subtitle {
+  font-size: 1.2rem;
+  color: #666;
+  margin: 0;
+}
+
+.back-button {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.2s ease;
+  margin-bottom: 1rem;
+}
+
+.back-button:hover {
+  background: #764ba2;
+}
+
+/* Artist Page Styles */
+.artist-tracks-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.track-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.track-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+
+.track-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #667eea;
+  min-width: 2rem;
+  text-align: center;
+}
+
+.track-album-art {
+  cursor: pointer;
+}
+
+.track-album-image {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+
+.track-album-art:hover .track-album-image {
+  transform: scale(1.05);
+}
+
+.track-info {
+  flex: 1;
+}
+
+.track-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 0.25rem 0;
+}
+
+.track-album {
+  font-size: 0.9rem;
+  color: #888;
+  margin: 0;
+  font-style: italic;
+}
+
+.add-track-button {
+  background: #667eea;
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-track-button:hover {
+  background: #764ba2;
+  transform: scale(1.1);
+}
+
+/* Album Page Styles */
+.album-header {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 3rem;
+  align-items: center;
+}
+
+.album-cover-large {
+  width: 200px;
+  height: 200px;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.album-info {
+  flex: 1;
+}
+
+.album-title {
+  font-size: 2.5rem;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.album-artist {
+  font-size: 1.4rem;
+  color: #666;
+  margin: 0 0 0.5rem 0;
+}
+
+.album-details {
+  font-size: 1rem;
+  color: #888;
+  margin: 0;
+}
+
+.tracks-title {
+  font-size: 1.8rem;
+  color: #333;
+  margin: 0 0 1.5rem 0;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 0.5rem;
+}
+
+.album-tracks-list {
+  margin-bottom: 2rem;
+}
+
+.album-track-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: background 0.2s ease;
+}
+
+.album-track-card:hover {
+  background: #f8f9fa;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #888;
+  font-size: 1.1rem;
+}
+
+/* Pagination Styles */
+.pagination {
+  margin: 3rem 0;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.pagination-info {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.pagination-text {
+  font-size: 1rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pagination-btn {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  min-width: 70px;
+}
+
+.pagination-btn:hover:not(.disabled) {
+  background: #764ba2;
+  transform: translateY(-1px);
+}
+
+.pagination-btn.disabled {
+  background: #e9ecef;
+  color: #adb5bd;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pagination-numbers {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  margin: 0 1rem;
+}
+
+.pagination-number {
+  background: transparent;
+  color: #667eea;
+  border: 2px solid #667eea;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-number:hover:not(.active) {
+  background: #667eea;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.pagination-number.active {
+  background: #667eea;
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.pagination-dots {
+  color: #adb5bd;
+  font-weight: 600;
+  padding: 0 0.5rem;
+  font-size: 1.2rem;
+}
+
+.pagination-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  color: #667eea;
+  font-size: 0.9rem;
+}
+
+.pagination-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e9ecef;
+  border-top: 2px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .pagination-controls {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .pagination-numbers {
+    margin: 0;
+  }
+  
+  .pagination-btn {
+    min-width: 120px;
+  }
+}
+
+.search-error {
+  padding: 1rem;
+  text-align: center;
+  color: #e53e3e;
+  font-size: 0.9rem;
+}
+
+/* 検索入力の上位コンテナでの調整 */
+.form-group .search-input-container {
+  margin-top: 0.5rem;
 }
