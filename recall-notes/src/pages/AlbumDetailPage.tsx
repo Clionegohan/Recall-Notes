@@ -28,7 +28,7 @@ export const AlbumDetailPage = () => {
   const [error, setError] = useState<string | null>(null)
   const [addingTrackId, setAddingTrackId] = useState<string | null>(null)
   
-  const addPlaylist = useMutation(api.functions.playlists.addPlaylist)
+  const addPlaylist = useMutation(api["functions/playlists"].addPlaylist)
 
   useEffect(() => {
     const fetchAlbumTracks = async () => {

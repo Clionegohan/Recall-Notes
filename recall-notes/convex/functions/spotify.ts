@@ -62,8 +62,10 @@ export const searchTracks = action({
           popularity: track.popularity
         }))
         .sort((a: any, b: any) => {
-          const scoreA = calculateJapanesePreferenceScore(a);
-          const scoreB = calculateJapanesePreferenceScore(b);
+          const trackA = { name: a.name, artists: [{ name: a.artist }], album: { name: a.albumName }, popularity: a.popularity };
+          const trackB = { name: b.name, artists: [{ name: b.artist }], album: { name: b.albumName }, popularity: b.popularity };
+          const scoreA = calculateJapanesePreferenceScore(trackA);
+          const scoreB = calculateJapanesePreferenceScore(trackB);
           return scoreB - scoreA;
         });
 

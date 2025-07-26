@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useAction } from 'convex/react'
 import { useDebounce } from './useDebounce'
-import { searchSpotifyArtists } from '../services/spotify'
-import { hasSpotifyCredentials } from '../services/mockSpotify'
+import { searchMockSpotifyArtists } from '../services/mockSpotify'
+import { api } from '../../convex/_generated/api'
 import type { SpotifyArtist } from '../types/spotify'
 
 interface ArtistSearchState {
@@ -29,6 +30,9 @@ export const useSpotifyArtistSearch = (
     minQueryLength = 2,
     enableCache = true
   } = options
+
+  // Convex action for Spotify artist search
+  const searchArtists = useAction(api["functions/spotify"].searchArtists)
 
   // 状態管理
   const [searchState, setSearchState] = useState<ArtistSearchState>({
@@ -76,10 +80,10 @@ export const useSpotifyArtistSearch = (
     }))
 
     try {
-      // 環境変数が設定されていない場合はモックデータを使用（今回はアーティストのみ）
-      const results = hasSpotifyCredentials 
-        ? await searchSpotifyArtists(searchQuery, limit)
-        : [] // モックアーティストデータは別途実装が必要
+      console.log('Starting Spotify artist search for:', searchQuery)
+      // Convex action経由でSpotify APIを呼び出し
+      const results = await searchArtists({ query: searchQuery, limit }) as SpotifyArtist[]
+      console.log('Spotify artist search results:', results.length, 'artists')
       
       // キャッシュに保存
       if (enableCache) {
@@ -94,15 +98,34 @@ export const useSpotifyArtistSearch = (
       }))
 
     } catch (error) {
-      console.error('Artist search error:', error)
-      setSearchState(prev => ({
-        ...prev,
-        artists: [],
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'アーティスト検索エラーが発生しました'
-      }))
+      console.error('Spotify artist search error:', error)
+      // エラー時はモックデータにフォールバック
+      console.log('Falling back to mock data')
+      try {
+        const mockResults = await searchMockSpotifyArtists(searchQuery, limit)
+        console.log('Mock artist search results:', mockResults.length, 'artists')
+        
+        if (enableCache) {
+          cache.set(searchQuery, mockResults)
+        }
+
+        setSearchState(prev => ({
+          ...prev,
+          artists: mockResults,
+          isLoading: false,
+          error: null
+        }))
+      } catch (mockError) {
+        console.error('Mock artist search also failed:', mockError)
+        setSearchState(prev => ({
+          ...prev,
+          artists: [],
+          isLoading: false,
+          error: 'アーティスト検索エラーが発生しました'
+        }))
+      }
     }
-  }, [cache, enableCache, limit, minQueryLength])
+  }, [cache, enableCache, limit, minQueryLength, searchArtists])
 
   // デバウンスされたクエリに基づいて検索実行
   useEffect(() => {

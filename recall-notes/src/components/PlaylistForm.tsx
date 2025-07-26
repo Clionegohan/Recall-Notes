@@ -20,7 +20,7 @@ export const PlaylistForm = ({ userId, onError, onSuccess }: PlaylistFormProps) 
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   
   const navigate = useNavigate()
-  const addPlaylist = useMutation(api.functions.playlists.addPlaylist)
+  const addPlaylist = useMutation(api["functions/playlists"].addPlaylist)
 
   const handleTrackSelect = (track: TrackSuggestion) => {
     setSelectedTrack(track)

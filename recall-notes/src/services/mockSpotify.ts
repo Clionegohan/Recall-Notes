@@ -291,6 +291,10 @@ export const searchMockSpotifyTracks = (query: string, limit?: number) => {
   return MockSpotifySearchService.searchTracks(query, limit)
 }
 
+export const searchMockSpotifyArtists = (query: string, limit?: number) => {
+  return MockSpotifySearchService.searchArtists(query, limit)
+}
+
 // 開発環境判定
 export const hasSpotifyCredentials = !!(
   import.meta.env.VITE_SPOTIFY_CLIENT_ID && 

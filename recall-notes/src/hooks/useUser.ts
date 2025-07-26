@@ -8,7 +8,7 @@ export const useUser = () => {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   
-  const createUser = useMutation(api.functions.users.createUser)
+  const createUser = useMutation(api["functions/users"].createUser)
 
   useEffect(() => {
     const initializeUser = async () => {
